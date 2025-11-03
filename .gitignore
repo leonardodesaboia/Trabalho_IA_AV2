@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Data Science / Machine Learning
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.npy
+*.npz
+results_*.pkl
+resultados_*.pkl
+
+# Logs
+*.log
+*.out
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Imagens temporárias ou de teste (manter apenas as finais)
+# Descomente se quiser ignorar todas as imagens:
+# *.png
+# *.jpg
+# *.jpeg
+
+# Modelos treinados grandes
+models/
+checkpoints/
+
+# Outputs temporários
+output/
+temp/
+tmp/
+
+# CSV grandes (manter apenas o dataset original)
+# *_processed.csv
+# *_results.csv
