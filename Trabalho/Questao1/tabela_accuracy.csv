@@ -1,0 +1,4 @@
+Modelo,Media,Desvio_Padrao,Maximo,Minimo
+Perceptron,70.97,7.74,85.71,37.50
+ADALINE,77.50,3.33,85.71,66.07
+MLP,98.75,0.70,100.00,96.07
