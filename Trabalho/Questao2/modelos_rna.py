@@ -51,10 +51,11 @@ class PerceptronMulticlasse:
             epochs += 1
 
 
-class ADALINEMulticlasse:
-    def __init__(self, X_train, Y_train, learning_rate=1e-3, max_epochs=1000, tol=1e-5):
+class MADALINEMulticlasse:
+    def __init__(self, X_train, Y_train, n_hidden=30, learning_rate=1e-3, max_epochs=1000, tol=1e-5):
         self.p, self.N = X_train.shape
         self.C = Y_train.shape[0]
+        self.n_hidden = n_hidden
         
         self.X_train = np.vstack((
             -np.ones((1, self.N)), X_train
@@ -64,16 +65,34 @@ class ADALINEMulticlasse:
         self.lr = learning_rate
         self.max_epochs = max_epochs
         self.tol = tol
-        self.W = np.random.random_sample((self.C, self.p+1)) - 0.5
+        
+        self.W1 = np.random.random_sample((n_hidden, self.p+1)) - 0.5
+        self.W2 = np.random.random_sample((self.C, n_hidden+1)) - 0.5
         self.hist_eqm = []
+    
+    def g(self, u):
+        return np.tanh(u)
+    
+    def g_d(self, u):
+        return 1 - np.tanh(u)**2
+    
+    def forward(self, x):
+        self.z1 = self.W1 @ x
+        self.a1 = self.g(self.z1)
+        
+        a1_bias = np.vstack((-np.ones((1, 1)), self.a1))
+        self.z2 = self.W2 @ a1_bias
+        self.a2 = self.z2
+        
+        return self.a2
     
     def EQM(self):
         s = 0
         for k in range(self.N):
             x_k = self.X_train[:, k].reshape(self.p+1, 1)
-            u_k = self.W @ x_k
+            y_k = self.forward(x_k)
             d_k = self.d[:, k].reshape(self.C, 1)
-            e_k = d_k - u_k
+            e_k = d_k - y_k
             s += np.sum(e_k**2)
         return s / (2 * self.N)
     
@@ -88,10 +107,15 @@ class ADALINEMulticlasse:
             
             for k in range(self.N):
                 x_k = self.X_train[:, k].reshape(self.p+1, 1)
-                u_k = self.W @ x_k
+                y_k = self.forward(x_k)
                 d_k = self.d[:, k].reshape(self.C, 1)
-                e_k = d_k - u_k
-                self.W = self.W + self.lr * (e_k @ x_k.T)
+                e_k = d_k - y_k
+                
+                a1_bias = np.vstack((-np.ones((1, 1)), self.a1))
+                self.W2 = self.W2 + self.lr * (e_k @ a1_bias.T)
+                
+                delta_hidden = (self.W2[:, 1:].T @ e_k) * self.g_d(self.z1)
+                self.W1 = self.W1 + self.lr * (delta_hidden @ x_k.T)
             
             EQM2 = self.EQM()
             epochs += 1
