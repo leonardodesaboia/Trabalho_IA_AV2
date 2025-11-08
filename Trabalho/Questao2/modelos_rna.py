@@ -52,7 +52,7 @@ class PerceptronMulticlasse:
 
 
 class MADALINEMulticlasse:
-    def __init__(self, X_train, Y_train, n_hidden=30, learning_rate=1e-3, max_epochs=1000, tol=1e-5):
+    def __init__(self, X_train, Y_train, n_hidden=30, learning_rate=1e-2, max_epochs=1000, tol=1e-6):
         self.p, self.N = X_train.shape
         self.C = Y_train.shape[0]
         self.n_hidden = n_hidden
@@ -66,25 +66,56 @@ class MADALINEMulticlasse:
         self.max_epochs = max_epochs
         self.tol = tol
         
-        self.W1 = np.random.random_sample((n_hidden, self.p+1)) - 0.5
-        self.W2 = np.random.random_sample((self.C, n_hidden+1)) - 0.5
+        # Inicialização Xavier
+        limit1 = np.sqrt(6.0 / (self.p + 1 + n_hidden))
+        self.W1 = np.random.uniform(-limit1, limit1, (n_hidden, self.p+1))
+        
+        limit2 = np.sqrt(6.0 / (n_hidden + 1 + self.C))
+        self.W2 = np.random.uniform(-limit2, limit2, (self.C, n_hidden+1))
+        
         self.hist_eqm = []
     
     def g(self, u):
-        return np.tanh(u)
+        # Sigmoid ao invés de tanh - mais estável
+        return 1.0 / (1.0 + np.exp(-np.clip(u, -500, 500)))
     
-    def g_d(self, u):
-        return 1 - np.tanh(u)**2
+    def g_d(self, a):
+        # Derivada da sigmoid: g'(u) = g(u) * (1 - g(u))
+        # Já temos a = g(u), então usamos direto
+        return a * (1.0 - a)
     
     def forward(self, x):
-        self.z1 = self.W1 @ x
-        self.a1 = self.g(self.z1)
+        # Camada oculta
+        self.u1 = self.W1 @ x
+        self.a1 = self.g(self.u1)
         
+        # Adiciona bias
         a1_bias = np.vstack((-np.ones((1, 1)), self.a1))
-        self.z2 = self.W2 @ a1_bias
-        self.a2 = self.z2
+        
+        # Camada de saída (linear)
+        self.u2 = self.W2 @ a1_bias
+        self.a2 = self.u2
         
         return self.a2
+    
+    def backward(self, x, d):
+        # Forward
+        y = self.forward(x)
+        
+        # Erro na saída
+        e2 = d - y
+        
+        # Gradiente camada de saída (linear, sem derivada)
+        a1_bias = np.vstack((-np.ones((1, 1)), self.a1))
+        grad_W2 = e2 @ a1_bias.T
+        
+        # Retropropaga erro para camada oculta
+        delta1 = (self.W2[:, 1:].T @ e2) * self.g_d(self.a1)
+        grad_W1 = delta1 @ x.T
+        
+        # Atualiza pesos
+        self.W2 = self.W2 + self.lr * grad_W2
+        self.W1 = self.W1 + self.lr * grad_W1
     
     def EQM(self):
         s = 0
@@ -97,28 +128,25 @@ class MADALINEMulticlasse:
         return s / (2 * self.N)
     
     def fit(self):
-        epochs = 0
-        EQM1 = 0
-        EQM2 = 1
+        EQM_ant = self.EQM()
+        self.hist_eqm.append(EQM_ant)
         
-        while abs(EQM1 - EQM2) > self.tol and epochs < self.max_epochs:
-            EQM1 = self.EQM()
-            self.hist_eqm.append(EQM1)
-            
+        for epoch in range(self.max_epochs):
+            # Treina em todas as amostras
             for k in range(self.N):
                 x_k = self.X_train[:, k].reshape(self.p+1, 1)
-                y_k = self.forward(x_k)
                 d_k = self.d[:, k].reshape(self.C, 1)
-                e_k = d_k - y_k
-                
-                a1_bias = np.vstack((-np.ones((1, 1)), self.a1))
-                self.W2 = self.W2 + self.lr * (e_k @ a1_bias.T)
-                
-                delta_hidden = (self.W2[:, 1:].T @ e_k) * self.g_d(self.z1)
-                self.W1 = self.W1 + self.lr * (delta_hidden @ x_k.T)
+                self.backward(x_k, d_k)
             
-            EQM2 = self.EQM()
-            epochs += 1
+            # Calcula EQM
+            EQM_atual = self.EQM()
+            self.hist_eqm.append(EQM_atual)
+            
+            # Verifica convergência
+            if abs(EQM_ant - EQM_atual) < self.tol:
+                break
+            
+            EQM_ant = EQM_atual
 
 
 class MultilayerPerceptron:

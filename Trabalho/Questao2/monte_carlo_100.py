@@ -108,7 +108,7 @@ for r in range(R):
     resultados['Perceptron'].append(acc_per)
     
     # MADALINE
-    mad = MADALINEMulticlasse(X_train, Y_train, n_hidden=30, learning_rate=1e-3, max_epochs=1000, tol=1e-5)
+    mad = MADALINEMulticlasse(X_train, Y_train, n_hidden=30, learning_rate=1e-2, max_epochs=1000, tol=1e-6)
     mad.fit()
     acc_mad = calcular_acuracia(mad, X_test, Y_test, 'madaline')
     resultados['MADALINE'].append(acc_mad)
@@ -273,15 +273,12 @@ for modelo in ['Perceptron', 'MADALINE', 'MLP']:
     print(f"   Amplitude:          {est['maior'] - est['menor']:.2f}%")
     print(f"   Coef. Variação:     {(est['std']/est['media'])*100:.2f}%")
     
-    # Intervalo de confiança 95%
     ic_95 = 1.96 * est['std'] / np.sqrt(R)
     print(f"   IC 95%:             [{est['media']-ic_95:.2f}%, {est['media']+ic_95:.2f}%]")
     
-    # Acurácias acima de 95%
     acima_95 = np.sum(est['dados'] >= 95)
     print(f"   Rodadas ≥ 95%:      {acima_95}/{R} ({100*acima_95/R:.1f}%)")
 
-# Comparações entre modelos
 print(f"\n{'='*60}")
 print("COMPARAÇÕES ENTRE MODELOS")
 print("="*60)
@@ -291,22 +288,19 @@ mlp_vs_mad = estatisticas['MLP']['media'] - estatisticas['MADALINE']['media']
 mad_vs_per = estatisticas['MADALINE']['media'] - estatisticas['Perceptron']['media']
 
 print(f"\n🔄 Diferenças de Acurácia Média:")
-print(f"   MLP vs Perceptron:  +{mlp_vs_per:.2f}% (MLP superior)")
-print(f"   MLP vs MADALINE:    +{mlp_vs_mad:.2f}% (MLP superior)")
-print(f"   MADALINE vs Perceptron: +{mad_vs_per:.2f}% (MADALINE superior)")
+print(f"   MLP vs Perceptron:      +{mlp_vs_per:.2f}% (MLP superior)")
+print(f"   MLP vs MADALINE:        +{mlp_vs_mad:.2f}% (MLP superior)")
+print(f"   MADALINE vs Perceptron: +{mad_vs_per:.2f}%")
 
-# Consistência (modelo com menor desvio)
 mais_consistente = min(estatisticas.items(), key=lambda x: x[1]['std'])
 print(f"\n🎯 Modelo mais consistente: {mais_consistente[0]} (σ = {mais_consistente[1]['std']:.2f}%)")
 
-# Melhor caso vs pior caso
 melhor_modelo_max = max(estatisticas.items(), key=lambda x: x[1]['maior'])
 pior_modelo_min = min(estatisticas.items(), key=lambda x: x[1]['menor'])
 
 print(f"\n⭐ Melhor caso geral: {melhor_modelo_max[0]} com {melhor_modelo_max[1]['maior']:.2f}%")
 print(f"⚠️  Pior caso geral: {pior_modelo_min[0]} com {pior_modelo_min[1]['menor']:.2f}%")
 
-# Probabilidade de superar 90%
 print(f"\n📊 Probabilidade de Acurácia > 90%:")
 for modelo in ['Perceptron', 'MADALINE', 'MLP']:
     prob = np.sum(estatisticas[modelo]['dados'] > 90) / R * 100
@@ -328,11 +322,11 @@ per_std = estatisticas['Perceptron']['std']
 print(f"\n🏆 DESEMPENHO:")
 print(f"   MLP:        {mlp_mean:.2f}% ± {mlp_std:.2f}%  ✓ Melhor acurácia")
 print(f"   MADALINE:   {mad_mean:.2f}% ± {estatisticas['MADALINE']['std']:.2f}%  ✓ Rede de 2 camadas")
-print(f"   Perceptron: {per_mean:.2f}% ± {per_std:.2f}%  ✗ Modelo linear simples")
+print(f"   Perceptron: {per_mean:.2f}% ± {per_std:.2f}%  ○ Modelo linear simples")
 
 print(f"\n⚙️ HIPERPARÂMETROS:")
 print(f"   • MLP: [50,30], lr=0.01 → hierarquia de features")
-print(f"   • MADALINE: 30 neurônios ocultos, lr=0.001")
+print(f"   • MADALINE: 30 neurônios ocultos, lr=0.01")
 print(f"   • Perceptron: lr=0.001, max_epochs=500")
 
 print(f"\n📈 CONVERGÊNCIA:")
@@ -341,15 +335,15 @@ print(f"   • MADALINE: convergência em 2 camadas (oculta + saída)")
 print(f"   • Perceptron: oscilações até convergência")
 
 print(f"\n📋 MATRIZES DE CONFUSÃO (das rodadas extremas):")
-print(f"   • Confusão sistemática: at33 ↔ ch4f, boland ↔ choon")
 print(f"   • MLP distingue melhor casos ambíguos")
 print(f"   • MADALINE: performance intermediária")
+print(f"   • Perceptron: bom desempenho considerando limitação linear")
 
 print(f"\n🎯 CONCLUSÃO:")
 print(f"   MLP [50,30]: {mlp_mean:.2f}% (±{mlp_std:.2f}%) - RECOMENDADO")
 print(f"   • Problema não-linear exige arquiteturas profundas")
 print(f"   • Redimensionamento 50×50 suficiente (↓ 83.7% pixels)")
-print(f"   • MADALINE superior ao Perceptron mas inferior ao MLP")
+print(f"   • MADALINE intermediário entre modelos lineares e não-lineares")
 
 print(f"\n{'='*60}")
 print("✅ Simulação Monte Carlo concluída!")
