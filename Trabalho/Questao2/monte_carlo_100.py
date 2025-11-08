@@ -107,8 +107,8 @@ for r in range(R):
     acc_per = calcular_acuracia(per, X_test, Y_test, 'linear')
     resultados['Perceptron'].append(acc_per)
     
-    # MADALINE
-    mad = MADALINEMulticlasse(X_train, Y_train, n_hidden=30, learning_rate=1e-2, max_epochs=1000, tol=1e-6)
+    # MADALINE ✅ CORRIGIDO: learning_rate=5e-3
+    mad = MADALINEMulticlasse(X_train, Y_train, n_hidden=30, learning_rate=5e-3, max_epochs=1000, tol=1e-6)
     mad.fit()
     acc_mad = calcular_acuracia(mad, X_test, Y_test, 'madaline')
     resultados['MADALINE'].append(acc_mad)
@@ -290,7 +290,7 @@ mad_vs_per = estatisticas['MADALINE']['media'] - estatisticas['Perceptron']['med
 print(f"\n🔄 Diferenças de Acurácia Média:")
 print(f"   MLP vs Perceptron:      +{mlp_vs_per:.2f}% (MLP superior)")
 print(f"   MLP vs MADALINE:        +{mlp_vs_mad:.2f}% (MLP superior)")
-print(f"   MADALINE vs Perceptron: +{mad_vs_per:.2f}%")
+print(f"   MADALINE vs Perceptron: {mad_vs_per:+.2f}%")
 
 mais_consistente = min(estatisticas.items(), key=lambda x: x[1]['std'])
 print(f"\n🎯 Modelo mais consistente: {mais_consistente[0]} (σ = {mais_consistente[1]['std']:.2f}%)")
@@ -321,29 +321,29 @@ per_std = estatisticas['Perceptron']['std']
 
 print(f"\n🏆 DESEMPENHO:")
 print(f"   MLP:        {mlp_mean:.2f}% ± {mlp_std:.2f}%  ✓ Melhor acurácia")
-print(f"   MADALINE:   {mad_mean:.2f}% ± {estatisticas['MADALINE']['std']:.2f}%  ✓ Rede de 2 camadas")
+print(f"   MADALINE:   {mad_mean:.2f}% ± {estatisticas['MADALINE']['std']:.2f}%  ○ Rede de 2 camadas")
 print(f"   Perceptron: {per_mean:.2f}% ± {per_std:.2f}%  ○ Modelo linear simples")
 
 print(f"\n⚙️ HIPERPARÂMETROS:")
-print(f"   • MLP: [50,30], lr=0.01 → hierarquia de features")
-print(f"   • MADALINE: 30 neurônios ocultos, lr=0.01")
+print(f"   • MLP: [50,30], lr=0.01, tol=1e-8")
+print(f"   • MADALINE: 30 neurônios ocultos, lr=0.005, tol=1e-6")
 print(f"   • Perceptron: lr=0.001, max_epochs=500")
 
 print(f"\n📈 CONVERGÊNCIA:")
-print(f"   • MLP: convergência suave em ~100 épocas")
+print(f"   • MLP: convergência suave em ~100-200 épocas")
 print(f"   • MADALINE: convergência em 2 camadas (oculta + saída)")
-print(f"   • Perceptron: oscilações até convergência")
+print(f"   • Perceptron: oscilações até convergência ou limite de épocas")
 
-print(f"\n📋 MATRIZES DE CONFUSÃO (das rodadas extremas):")
+print(f"\n📋 OBSERVAÇÕES:")
 print(f"   • MLP distingue melhor casos ambíguos")
-print(f"   • MADALINE: performance intermediária")
-print(f"   • Perceptron: bom desempenho considerando limitação linear")
+print(f"   • MADALINE: performance intermediária entre modelos lineares e MLP")
+print(f"   • Perceptron: surpreendentemente bom neste dataset controlado")
 
 print(f"\n🎯 CONCLUSÃO:")
 print(f"   MLP [50,30]: {mlp_mean:.2f}% (±{mlp_std:.2f}%) - RECOMENDADO")
 print(f"   • Problema não-linear exige arquiteturas profundas")
-print(f"   • Redimensionamento 50×50 suficiente (↓ 83.7% pixels)")
-print(f"   • MADALINE intermediário entre modelos lineares e não-lineares")
+print(f"   • Redimensionamento 50×50 suficiente")
+print(f"   • MADALINE oferece alternativa intermediária")
 
 print(f"\n{'='*60}")
 print("✅ Simulação Monte Carlo concluída!")
